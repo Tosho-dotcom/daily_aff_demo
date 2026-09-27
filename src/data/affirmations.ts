@@ -1,5 +1,7 @@
-// 100 original affirmations, grouped by theme.
+// 200 original affirmations, grouped by theme (20 per theme).
 // To add or edit: keep each entry short (ideally under ~110 characters) so it reads well on a phone.
+// IDs stay stable: the first 10 in each theme are 1–100, the next 10 are 101–200.
+// Add new entries at the END of a theme's list so existing IDs never shift.
 
 export type Affirmation = { id: number; text: string; theme: Theme };
 export type Theme =
@@ -26,6 +28,17 @@ const raw: Record<Theme, string[]> = {
     "My voice matters, and I let it be heard.",
     "I honor the woman I am becoming.",
     "I am worthy of rest, joy and good things.",
+    // 101–110
+    "I do not need to earn my place in this world.",
+    "My presence is a gift, not a burden.",
+    "I am proud of the heart I carry.",
+    "I choose to believe the good things people see in me.",
+    "My softness is a strength, not a weakness.",
+    "I release the habit of comparing my life to others.",
+    "I am worthy even on the days I do nothing at all.",
+    "I let my true self be seen without fear.",
+    "The way I care for myself sets the standard for others.",
+    "I am a woman of value, today and always.",
   ],
   calm: [
     "I breathe in calm and breathe out what I cannot control.",
@@ -38,6 +51,17 @@ const raw: Record<Theme, string[]> = {
     "Slowing down is not falling behind.",
     "I choose ease over urgency today.",
     "Whatever comes today, I can meet it softly.",
+    // 111–120
+    "With every breath, I return to my center.",
+    "I give my worries permission to rest for a while.",
+    "Stillness is where I find my answers.",
+    "I do not rush my healing or my happiness.",
+    "My thoughts are clouds, and I let them pass.",
+    "I trust that I can handle this day one moment at a time.",
+    "I create calm wherever I go.",
+    "I let my shoulders drop and my heart soften.",
+    "I am grounded, present and at peace.",
+    "Tonight I will rest well, knowing I did enough today.",
   ],
   confidence: [
     "I trust myself to handle whatever today brings.",
@@ -50,6 +74,17 @@ const raw: Record<Theme, string[]> = {
     "Every challenge today is proof of what I can do.",
     "I make decisions from clarity, not fear.",
     "I am proud of how far I have come.",
+    // 121–130
+    "I speak up for what I want, clearly and kindly.",
+    "I stop shrinking to make others comfortable.",
+    "My confidence grows every time I keep a promise to myself.",
+    "I am allowed to be both gentle and powerful.",
+    "I do not need everyone to understand my path.",
+    "I trust my intuition to guide me well.",
+    "I am ready for the opportunities coming my way.",
+    "Fear may visit, but courage leads the way.",
+    "I celebrate my wins, big and small.",
+    "I am the author of my own story.",
   ],
   gratitude: [
     "I notice the small beautiful things around me.",
@@ -62,6 +97,17 @@ const raw: Record<Theme, string[]> = {
     "I find something to appreciate in every hour.",
     "I am thankful for the lessons that shaped me.",
     "There is so much good here, and I let myself feel it.",
+    // 131–140
+    "I am grateful for the woman I was, who brought me here.",
+    "A warm cup, a kind word, a quiet moment: these are riches.",
+    "I thank my heart for continuing to open.",
+    "Even hard days carry something to be grateful for.",
+    "I appreciate my home as a place of comfort and rest.",
+    "I am thankful for the friendships that feel like home.",
+    "My gratitude makes room for more good to arrive.",
+    "I honor the simple joys that make my life sweet.",
+    "I am grateful for every chance to begin again.",
+    "Today I count my blessings instead of my worries.",
   ],
   growth: [
     "I am growing, even on the days I cannot see it.",
@@ -74,6 +120,17 @@ const raw: Record<Theme, string[]> = {
     "I let go of who I was expected to be.",
     "Each day I choose habits that support my future self.",
     "I trust the timing of my life.",
+    // 141–150
+    "I am allowed to outgrow old versions of myself.",
+    "Every new beginning holds a hidden gift.",
+    "I learn from the past without living in it.",
+    "My roots grow deeper even when I feel still.",
+    "I am patient with myself while I become who I am meant to be.",
+    "Discomfort is a sign that I am growing.",
+    "I choose curiosity over criticism.",
+    "Small daily choices are shaping a beautiful life.",
+    "I am open to new ways of seeing the world.",
+    "I bloom at my own pace, and that is perfect.",
   ],
   body: [
     "I treat my body with patience and care.",
@@ -86,6 +143,17 @@ const raw: Record<Theme, string[]> = {
     "Rest is a gift I give my body without guilt.",
     "I feel at home in my own skin.",
     "I glow from the inside out.",
+    // 151–160
+    "My body is not a project; it is my partner.",
+    "I speak kindly about my body, out loud and in my mind.",
+    "I give myself permission to rest when I am tired.",
+    "Water, sunlight and sleep are acts of self-love.",
+    "I honor my body through every season of life.",
+    "I release the pressure to look a certain way.",
+    "My body carries me through life, and I thank it daily.",
+    "I choose comfort and care over criticism.",
+    "Every breath fills me with fresh energy.",
+    "I am radiant just as I am.",
   ],
   love: [
     "I attract relationships that feel safe and warm.",
@@ -98,6 +166,17 @@ const raw: Record<Theme, string[]> = {
     "I am my own lifelong best friend.",
     "Love flows to me easily and naturally.",
     "I bring softness to everyone I meet today.",
+    // 161–170
+    "I am worthy of being chosen, fully and clearly.",
+    "The love I give myself teaches others how to love me.",
+    "I welcome connections that bring out my best.",
+    "I let go of love that asks me to be smaller.",
+    "My heart knows the difference between love and longing.",
+    "I am lovable on my best days and my hardest days.",
+    "Kindness flows from me and returns to me.",
+    "I nurture the relationships that nurture me.",
+    "I am safe to love and be loved.",
+    "My heart is full, and there is always room for more.",
   ],
   abundance: [
     "Good things are finding their way to me.",
@@ -110,6 +189,17 @@ const raw: Record<Theme, string[]> = {
     "Every day brings new chances to grow my dreams.",
     "I plant seeds today that will bloom tomorrow.",
     "My future is bright, and I am building it now.",
+    // 171–180
+    "I am a magnet for beautiful opportunities.",
+    "I deserve to be paid well for my gifts.",
+    "I let go of scarcity and welcome possibility.",
+    "My dreams are valid, and I take steps toward them.",
+    "I spend, save and share with wisdom and ease.",
+    "The right people and doors are opening for me.",
+    "I am creating a life that feels as good as it looks.",
+    "Success comes to me in ways that feel aligned.",
+    "I receive good things without guilt.",
+    "I am building something that makes me proud.",
   ],
   boundaries: [
     "Saying no to others can mean saying yes to myself.",
@@ -122,6 +212,17 @@ const raw: Record<Theme, string[]> = {
     "I can be kind and still be clear.",
     "I let go of people-pleasing and choose authenticity.",
     "My peace is a priority, not a luxury.",
+    // 181–190
+    "I do not owe anyone an explanation for protecting my peace.",
+    "Rest is not something I have to earn.",
+    "I honor my limits without guilt.",
+    "I choose relationships that respect my boundaries.",
+    "It is safe for me to disappoint others to stay true to myself.",
+    "I let others handle their own feelings.",
+    "My time is precious, and I spend it with intention.",
+    "I say yes only when my heart means it.",
+    "I am allowed to step away from what drains me.",
+    "Protecting my energy is an act of self-respect.",
   ],
   joy: [
     "I let myself laugh freely today.",
@@ -134,9 +235,27 @@ const raw: Record<Theme, string[]> = {
     "I create moments that make my heart feel full.",
     "I am open to being pleasantly surprised today.",
     "I am radiant, hopeful and ready for this day.",
+    // 191–200
+    "I make time for the things that make me smile.",
+    "Happiness is allowed to be simple.",
+    "I dance, sing and play like no one is keeping score.",
+    "I let joy in, even when life is not perfect.",
+    "My smile is a small gift I give the world.",
+    "I am allowed to enjoy my life right now.",
+    "I look for the magic in ordinary days.",
+    "Laughter comes easily to me.",
+    "I carry sunshine with me wherever I go.",
+    "Today I choose delight over doubt.",
   ],
 };
 
-export const affirmations: Affirmation[] = (Object.keys(raw) as Theme[]).flatMap(
-  (theme, t) => raw[theme].map((text, i) => ({ id: t * 10 + i + 1, text, theme })),
+const THEMES = Object.keys(raw) as Theme[];
+
+export const affirmations: Affirmation[] = THEMES.flatMap((theme, t) =>
+  raw[theme].map((text, i) => ({
+    // i 0–9 → 1–100 (original set), i 10–19 → 101–200, and so on in blocks of 100.
+    id: Math.floor(i / 10) * 100 + t * 10 + (i % 10) + 1,
+    text,
+    theme,
+  })),
 );

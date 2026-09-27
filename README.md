@@ -10,7 +10,7 @@ Radni naziv je **Softbloom**; mijenja se na jednom mjestu: `src/lib/config.ts`.
 |---|---|
 | Prva prijava | Ekran s imenom, e-mailom i privolom → `POST /api/subscribe` → n8n webhook → Notion |
 | Sljedeća otvaranja | Uređaj pamti prijavu u `localStorage`; nema poziva prema serveru, odmah se otvara glavni ekran |
-| Afirmacije | 100 originalnih afirmacija u `src/data/affirmations.ts`, 10 tema |
+| Afirmacije | 200 originalnih afirmacija u `src/data/affirmations.ts`, 10 tema po 20 |
 | Bez ponavljanja | Izmiješani „špil” na uređaju; nova runda počinje tek kad se prikažu sve |
 | Dnevno ograničenje | 5 afirmacija dnevno (lokalni dan korisnice), zatim poruka „come back tomorrow” |
 | Ispad n8n-a | Korisnica ipak ulazi; prijava se sprema lokalno i ponovno šalje pri sljedećem otvaranju |

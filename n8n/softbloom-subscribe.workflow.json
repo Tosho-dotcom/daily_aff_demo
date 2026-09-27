@@ -1,0 +1,336 @@
+{
+  "name": "Softbloom – Subscribe (app → Notion)",
+  "nodes": [
+    {
+      "id": "919a0c9e-3014-4f55-8827-ded9e6b34127",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "b2b31a0f-3745-4617-a037-603ebb6afe94",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "softbloom-subscribe",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "63c40f35-23c0-4108-90b9-5a268acfa970",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Shared secret: must match N8N_WEBHOOK_SECRET in Vercel.\nconst SECRET = 'CHANGE_ME_LONG_RANDOM_STRING';\n\nconst req = $input.first().json;\nconst headers = req.headers || {};\nconst b = req.body || {};\n\nconst clean = (v, max) => String(v ?? '').trim().slice(0, max);\nconst email = clean(b.email, 254).toLowerCase();\nconst name = clean(b.name, 60);\n\nlet reason = '';\nif (headers['x-webhook-secret'] !== SECRET) reason = 'unauthorized';\nelse if (!name) reason = 'name_required';\nelse if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) reason = 'email_invalid';\nelse if (b.consent !== true) reason = 'consent_required';\n\nreturn [{\n  json: {\n    valid: reason === '',\n    reason,\n    name,\n    email,\n    consent: b.consent === true,\n    timezone: clean(b.timezone, 64),\n    locale: clean(b.locale, 16),\n    country: clean(b.country, 8),\n    source: 'Softbloom app',\n    submittedAt: clean(b.submittedAt, 40) || new Date().toISOString(),\n  },\n}];"
+      }
+    },
+    {
+      "id": "b0bf8abd-3198-412b-b1a5-1fb1cd605795",
+      "name": "Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c62587f3-667a-4078-9d83-43d3daaf52a2",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "9e646d21-e768-4e92-8e46-9ee4a5b1b451",
+      "name": "Find in Notion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/databases/fa732bffb1c84b37933c89508666c693/query",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  filter: { property: 'Email', email: { equals: $json.email } },\n  page_size: 1\n}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1425861-8771-4140-a220-8c92d4b31bd0",
+      "name": "Already subscribed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "012d6214-3d97-4bc7-bda2-2d4a22dfbb4e",
+              "leftValue": "={{ $json.results.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f52c1b6d-b83a-4afb-9a82-0a95df6ec3cc",
+      "name": "Reactivate subscriber",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        100
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.results[0].id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  properties: {\n    'Status': { select: { name: 'Active' } },\n    'Consent': { checkbox: true },\n    'Date unsubscribed': { date: null }\n  }\n}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "dcedbc68-d54b-415c-b479-d54d8d8963a9",
+      "name": "Create subscriber",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1140,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/pages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  parent: { database_id: 'fa732bffb1c84b37933c89508666c693' },\n  properties: {\n    'Name': { title: [{ text: { content: $('Validate').item.json.name } }] },\n    'Email': { email: $('Validate').item.json.email },\n    'Status': { select: { name: 'Active' } },\n    'Consent': { checkbox: true },\n    'Source': { select: { name: $('Validate').item.json.source } },\n    'Date subscribed': { date: { start: $('Validate').item.json.submittedAt } },\n    'Timezone': { rich_text: [{ text: { content: $('Validate').item.json.timezone } }] },\n    'Locale': { rich_text: [{ text: { content: $('Validate').item.json.locale } }] },\n    'Country': { rich_text: [{ text: { content: $('Validate').item.json.country } }] }\n  }\n}) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "b2021276-70fa-48d9-ad4e-6965a618af33",
+      "name": "Respond exists",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"status\": \"exists\" }",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "6f4be99f-03ea-4cea-9adb-a20e893944a7",
+      "name": "Respond created",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1380,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"status\": \"created\" }",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    },
+    {
+      "id": "66c94a82-cde9-4584-b9bc-2c5b21ac4ae8",
+      "name": "Respond rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        440
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.reason }) }}",
+        "options": {
+          "responseCode": "={{ $json.reason === 'unauthorized' ? 401 : 422 }}"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid?": {
+      "main": [
+        [
+          {
+            "node": "Find in Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find in Notion": {
+      "main": [
+        [
+          {
+            "node": "Already subscribed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already subscribed?": {
+      "main": [
+        [
+          {
+            "node": "Reactivate subscriber",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create subscriber",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reactivate subscriber": {
+      "main": [
+        [
+          {
+            "node": "Respond exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create subscriber": {
+      "main": [
+        [
+          {
+            "node": "Respond created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

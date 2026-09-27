@@ -1,69 +1,45 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import Welcome from "@/components/Welcome";
+import Home from "@/components/Home";
+import { clearPending, getPending, getProfile, resetDevice, type Profile } from "@/lib/storage";
+
+export default function Page() {
+  const [ready, setReady] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    // Device check: has this browser already signed up? (localStorage, no server call)
+    /* eslint-disable react-hooks/set-state-in-effect -- reading device storage after mount */
+    setProfile(getProfile());
+    setReady(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+
+    // Retry a sign-up that could not reach the server last time.
+    const pending = getPending();
+    if (pending) {
+      fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(pending),
+      })
+        .then((r) => r.ok && clearPending())
+        .catch(() => {});
+    }
+  }, []);
+
+  if (!ready) return <div className="splash" aria-hidden="true" />;
+
+  if (!profile) return <Welcome onDone={setProfile} />;
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Home
+      profile={profile}
+      onReset={() => {
+        resetDevice();
+        setProfile(null);
+      }}
+    />
   );
 }

@@ -6,6 +6,7 @@ import Bloom from "./Bloom";
 import Particles from "./Particles";
 import { APP } from "@/lib/config";
 import { drawAffirmation, getDayStatus, type Profile } from "@/lib/storage";
+import { isSoundOn, playChime, setSoundOn } from "@/lib/chime";
 import type { Affirmation } from "@/data/affirmations";
 
 function greeting(d = new Date()) {
@@ -27,6 +28,7 @@ export default function Home({ profile, onReset }: { profile: Profile; onReset: 
   const [leaving, setLeaving] = useState<Leaving>("");
   const [enterFrom, setEnterFrom] = useState<"" | "left" | "right">("");
   const [hello, setHello] = useState("Hello");
+  const [sound, setSound] = useState(true);
   const touchX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function Home({ profile, onReset }: { profile: Profile; onReset: 
     const s = getDayStatus();
     /* eslint-disable react-hooks/set-state-in-effect -- reading device storage after mount */
     setHello(greeting());
+    setSound(isSoundOn());
     setShown(s.shown);
     setIndex(Math.max(0, s.shown.length - 1));
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -48,6 +51,8 @@ export default function Home({ profile, onReset }: { profile: Profile; onReset: 
     const res = drawAffirmation();
     if (!res) return;
     const hadOne = shown.length > 0;
+    // Called inside the tap handler (required by browsers); timed to land with the reveal.
+    playChime(hadOne ? 0.45 : 0.3);
     if (!hadOne) setBurst((b) => b + 1);
     setLeaving("fade");
     setTimeout(() => {
@@ -106,6 +111,29 @@ export default function Home({ profile, onReset }: { profile: Profile; onReset: 
       <Particles burstKey={burst} />
       <main className="screen home fade-in">
         <header className="home-head">
+          <button
+            className="sound-toggle"
+            onClick={() => {
+              const next = !sound;
+              setSound(next);
+              setSoundOn(next);
+            }}
+            aria-pressed={sound}
+            aria-label={sound ? "Mute sound" : "Turn sound on"}
+            title={sound ? "Sound on" : "Sound off"}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path className="spk" d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" />
+              {sound ? (
+                <>
+                  <path d="M15.5 9.2a4 4 0 0 1 0 5.6" />
+                  <path d="M18 7a7 7 0 0 1 0 10" />
+                </>
+              ) : (
+                <path d="M16 9.5l5 5m0-5l-5 5" />
+              )}
+            </svg>
+          </button>
           <div className="mini-brand">
             <Bloom size={26} />
             <span>{APP.name}</span>

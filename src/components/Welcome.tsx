@@ -16,7 +16,9 @@ export default function Welcome({ onDone }: { onDone: (p: Profile) => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
-  const [company, setCompany] = useState(""); // honeypot
+  // Honeypot for bots. Its name must not look like anything browsers autofill
+  // (e.g. "company", "address", "name"), otherwise real users get flagged.
+  const [trap, setTrap] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,7 +44,7 @@ export default function Welcome({ onDone }: { onDone: (p: Profile) => void }) {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...payload, company }),
+        body: JSON.stringify({ ...payload, sb_trap: trap }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 422) {
@@ -88,10 +90,12 @@ export default function Welcome({ onDone }: { onDone: (p: Profile) => void }) {
           />
         </label>
 
-        {/* honeypot – hidden from people, visible to bots */}
+        {/* honeypot – hidden from people and ignored by autofill/password managers */}
         <input
-          className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true"
-          value={company} onChange={(e) => setCompany(e.target.value)} name="company"
+          type="text" className="hp" tabIndex={-1} aria-hidden="true"
+          id="sb_trap_x" name="sb_trap_x" autoComplete="off"
+          data-lpignore="true" data-1p-ignore="true" data-form-type="other"
+          value={trap} onChange={(e) => setTrap(e.target.value)}
         />
 
         <label className="consent">

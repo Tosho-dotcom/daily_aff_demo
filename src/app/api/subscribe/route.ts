@@ -18,7 +18,8 @@ export async function POST(request: Request) {
   }
 
   // Honeypot: real users never fill this hidden field.
-  if (typeof body.company === "string" && body.company.trim() !== "") {
+  if (typeof body.sb_trap === "string" && body.sb_trap.trim() !== "") {
+    console.warn("[subscribe] honeypot triggered – request dropped");
     return Response.json({ ok: true });
   }
 

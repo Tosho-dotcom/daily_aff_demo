@@ -143,7 +143,7 @@ button { font: inherit; color: inherit; }
 .hello { font-family: var(--serif); font-size: 1.7rem; font-weight: 500; }
 .hello em { color: var(--rose-deep); }
 
-.stage { flex: 1; display: grid; place-items: center; padding: 24px 0; }
+.stage { flex: 1; display: grid; place-items: center; padding: 24px 0; touch-action: pan-y; }
 
 /* the big soft button */
 .orb {
@@ -172,6 +172,12 @@ button { font: inherit; color: inherit; }
   transition: opacity 0.45s ease, filter 0.45s ease, transform 0.45s ease;
 }
 .aff-out { opacity: 0; filter: blur(10px); transform: translateY(-10px) scale(0.98); }
+.aff-out-left { opacity: 0; filter: blur(6px); transform: translateX(-40px); transition-duration: 0.28s; }
+.aff-out-right { opacity: 0; filter: blur(6px); transform: translateX(40px); transition-duration: 0.28s; }
+.aff-in-right { animation: inRight 0.4s ease both; }
+.aff-in-left { animation: inLeft 0.4s ease both; }
+@keyframes inRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes inLeft { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
 .theme-tag {
   font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
   color: var(--rose-deep); background: rgba(255, 255, 255, 0.65); padding: 6px 12px; border-radius: 999px;
@@ -185,18 +191,30 @@ button { font: inherit; color: inherit; }
 .word { display: inline-block; white-space: pre; opacity: 0; filter: blur(8px); transform: translateY(10px); animation: wordIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
 @keyframes wordIn { to { opacity: 1; filter: blur(0); transform: none; } }
 
-.repeat {
-  display: flex; align-items: center; gap: 12px;
-  font-size: 0.84rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--plum-soft);
-  opacity: 0; animation: fadeIn 0.8s ease forwards;
-}
-.repeat-line { width: 26px; height: 1px; background: currentColor; opacity: 0.4; }
-
 .home-foot { display: flex; flex-direction: column; align-items: center; gap: 16px; min-height: 120px; justify-content: flex-end; }
 .limit { font-family: var(--serif); font-style: italic; font-size: 1.15rem; text-align: center; color: var(--plum-soft); max-width: 300px; }
-.dots { display: flex; gap: 8px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(125, 102, 131, 0.18); transition: background 0.4s, transform 0.4s; }
-.dot.on { background: linear-gradient(135deg, var(--rose), var(--lilac)); transform: scale(1.15); }
+.pager { display: flex; align-items: center; gap: 14px; min-height: 36px; }
+.pager-arrow {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(232, 163, 181, 0.35);
+  transition: background 0.2s, opacity 0.2s, transform 0.2s;
+}
+.pager-arrow svg { width: 16px; height: 16px; fill: none; stroke: var(--rose-deep); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pager-arrow:hover:not(:disabled) { background: #fff; transform: scale(1.06); }
+.pager-arrow:disabled { opacity: 0.3; cursor: default; }
+.pager-arrow:focus-visible, .dot:focus-visible { outline: 3px solid rgba(201, 116, 143, 0.4); outline-offset: 3px; }
+
+.dots { display: flex; align-items: center; gap: 8px; }
+.dot {
+  width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; cursor: default;
+  background: rgba(125, 102, 131, 0.12); transition: background 0.4s, width 0.35s ease, transform 0.3s;
+}
+.dot.on { background: linear-gradient(135deg, var(--rose), var(--lilac)); cursor: pointer; opacity: 0.7; }
+.dot.on:hover:not(:disabled) { opacity: 0.85; }
+.dot.active { width: 22px; opacity: 1; }
+/* larger invisible tap target for fingers */
+.dot { position: relative; }
+.dot::after { content: ""; position: absolute; inset: -10px -4px; }
 
 .legal { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; font-size: 0.76rem; color: #a893ab; }
 .legal a, .linklike { color: #a893ab; text-decoration: none; background: none; border: 0; cursor: pointer; font-size: inherit; }

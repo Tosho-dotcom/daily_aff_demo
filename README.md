@@ -77,7 +77,7 @@ Value: e-mail malim slovima, Secret: isti `UNSUBSCRIBE_SECRET`, Encoding: HEX).
 
 ## Prilagodbe
 
-- **Tekstovi i limit**: `src/lib/config.ts` (naziv, slogan, `dailyLimit`, „Repeat it 5 times before 9 AM”, kontakt e-mail)
+- **Tekstovi i limit**: `src/lib/config.ts` (naziv, slogan, `dailyLimit`, kontakt e-mail)
 - **Afirmacije**: `src/data/affirmations.ts`
 - **Boje i fontovi**: varijable na vrhu `src/app/globals.css` (Cormorant Garamond + Nunito, lokalno uključeni, bez Google Fonts poziva)
 - **Ikone**: `public/icons/*`, `src/app/icon.png`, `src/app/apple-icon.png`

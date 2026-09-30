@@ -1,8 +1,8 @@
 {
-  "name": "Softbloom – Subscribe (app → Notion)",
+  "name": "Softbloom – Unsubscribe (app → Notion)",
   "nodes": [
     {
-      "id": "3394d904-3fcf-4c6f-b51e-320ac1c62faa",
+      "id": "236c6c48-561f-4f3f-bd9c-ac9b6fdc8aee",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -10,16 +10,16 @@
         0,
         300
       ],
-      "webhookId": "ee134d44-9742-4e55-bfb1-3eefa49ee826",
+      "webhookId": "93262b94-1657-4329-815f-fd67e3b6dd48",
       "parameters": {
         "httpMethod": "POST",
-        "path": "softbloom-subscribe",
+        "path": "softbloom-unsubscribe",
         "responseMode": "responseNode",
         "options": {}
       }
     },
     {
-      "id": "ac9c58a3-dd61-4982-a3b4-65fa8571d1a3",
+      "id": "9426fb8b-5a23-45c3-a0e5-02deff2b16fa",
       "name": "Validate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -28,11 +28,11 @@
         300
       ],
       "parameters": {
-        "jsCode": "// Shared secret: must match N8N_WEBHOOK_SECRET in Vercel.\nconst SECRET = 'CHANGE_ME_LONG_RANDOM_STRING';\n\nconst req = $input.first().json;\nconst headers = req.headers || {};\nconst b = req.body || {};\n\nconst clean = (v, max) => String(v ?? '').trim().slice(0, max);\nconst email = clean(b.email, 254).toLowerCase();\nconst name = clean(b.name, 60);\n\nlet reason = '';\nif (headers['x-webhook-secret'] !== SECRET) reason = 'unauthorized';\nelse if (!name) reason = 'name_required';\nelse if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) reason = 'email_invalid';\nelse if (b.consent !== true) reason = 'consent_required';\n\nreturn [{\n  json: {\n    valid: reason === '',\n    reason,\n    name,\n    email,\n    consent: b.consent === true,\n    timezone: clean(b.timezone, 64),\n    locale: clean(b.locale, 16),\n    country: clean(b.country, 8),\n    source: 'Softbloom app',\n    submittedAt: clean(b.submittedAt, 40) || new Date().toISOString(),\n  },\n}];"
+        "jsCode": "// Shared secret: must match N8N_WEBHOOK_SECRET in Vercel (same value as in the subscribe workflow).\nconst SECRET = 'CHANGE_ME_LONG_RANDOM_STRING';\n\nconst req = $input.first().json;\nconst headers = req.headers || {};\nconst b = req.body || {};\nconst email = String(b.email ?? '').trim().toLowerCase().slice(0, 254);\n\nlet reason = '';\nif (headers['x-webhook-secret'] !== SECRET) reason = 'unauthorized';\nelse if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) reason = 'email_invalid';\n\nreturn [{\n  json: {\n    valid: reason === '',\n    reason,\n    email,\n    unsubscribedAt: String(b.unsubscribedAt ?? '').slice(0, 40) || new Date().toISOString(),\n  },\n}];"
       }
     },
     {
-      "id": "2b85b45f-1638-4761-ad37-2d4b4d8387bb",
+      "id": "f078fa11-2ed8-4d5a-811f-be4e47bf29ad",
       "name": "Valid?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -49,7 +49,7 @@
           },
           "conditions": [
             {
-              "id": "634517cc-4bba-4650-83e9-8c9d4736b283",
+              "id": "a94b9afe-4dd9-4c43-8dda-0fe98f314513",
               "leftValue": "={{ $json.valid }}",
               "rightValue": true,
               "operator": {
@@ -65,7 +65,7 @@
       }
     },
     {
-      "id": "13f0f46d-a2da-45f0-8d3d-1e2f79586e60",
+      "id": "e3833c37-d66f-4652-b5bc-38b5321a7164",
       "name": "Find in Notion",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -89,17 +89,32 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  filter: { property: 'Email', email: { equals: $json.email } },\n  page_size: 1\n}) }}",
+        "jsonBody": "={{ JSON.stringify({\n  filter: { property: 'Email', email: { equals: $json.email } },\n  page_size: 10\n}) }}",
         "options": {}
       }
     },
     {
-      "id": "69dd512d-34dd-4300-9fa3-df6743368cbc",
-      "name": "Already subscribed?",
+      "id": "85d4ed23-c263-4851-a631-17d1d75418f3",
+      "name": "Split pages",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "3660d2ea-5082-4dff-ba88-fb2cedbadc37",
+      "name": "Found?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        900,
+        1120,
         200
       ],
       "parameters": {
@@ -111,12 +126,13 @@
           },
           "conditions": [
             {
-              "id": "1d9e1ae8-758d-48f9-97a9-dca2bfbfee17",
-              "leftValue": "={{ $json.results.length }}",
-              "rightValue": 0,
+              "id": "b291deec-ec43-4217-bd41-9cef23484ac9",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
               "operator": {
-                "type": "number",
-                "operation": "gt"
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
               }
             }
           ],
@@ -126,17 +142,17 @@
       }
     },
     {
-      "id": "3139798c-60f2-4461-8292-222e2e2d696d",
-      "name": "Reactivate subscriber",
+      "id": "e92596c4-151f-4ac9-88b4-f61db71021df",
+      "name": "Mark unsubscribed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1140,
+        1340,
         100
       ],
       "parameters": {
         "method": "PATCH",
-        "url": "=https://api.notion.com/v1/pages/{{ $json.results[0].id }}",
+        "url": "=https://api.notion.com/v1/pages/{{ $json.id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "notionApi",
         "sendHeaders": true,
@@ -150,75 +166,46 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  properties: {\n    'Name': { title: [{ text: { content: $('Validate').item.json.name } }] },\n    'Status': { select: { name: 'Active' } },\n    'Consent': { checkbox: true },\n    'Date unsubscribed': { date: null }\n  }\n}) }}",
+        "jsonBody": "={{ JSON.stringify({\n  properties: {\n    'Status': { select: { name: 'Unsubscribed' } },\n    'Consent': { checkbox: false },\n    'Date unsubscribed': { date: { start: $('Validate').item.json.unsubscribedAt } }\n  }\n}) }}",
         "options": {}
       }
     },
     {
-      "id": "2822ddc4-2099-404c-9e14-1be219cc8132",
-      "name": "Create subscriber",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1140,
-        300
-      ],
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.notion.com/v1/pages",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "notionApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Notion-Version",
-              "value": "2022-06-28"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  parent: { database_id: 'fa732bffb1c84b37933c89508666c693' },\n  properties: {\n    'Name': { title: [{ text: { content: $('Validate').item.json.name } }] },\n    'Email': { email: $('Validate').item.json.email },\n    'Status': { select: { name: 'Active' } },\n    'Consent': { checkbox: true },\n    'Source': { select: { name: $('Validate').item.json.source } },\n    'Date subscribed': { date: { start: $('Validate').item.json.submittedAt } },\n    'Timezone': { rich_text: [{ text: { content: $('Validate').item.json.timezone } }] },\n    'Locale': { rich_text: [{ text: { content: $('Validate').item.json.locale } }] },\n    'Country': { rich_text: [{ text: { content: $('Validate').item.json.country } }] }\n  }\n}) }}",
-        "options": {}
-      }
-    },
-    {
-      "id": "e0b82a90-c294-4247-899c-0900b9afd92b",
-      "name": "Respond exists",
+      "id": "82d371d9-efdb-4aaf-82ae-3773bcf2f812",
+      "name": "Respond unsubscribed",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1380,
+        1560,
         100
       ],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={ \"ok\": true, \"status\": \"exists\" }",
+        "responseBody": "={ \"ok\": true, \"status\": \"unsubscribed\" }",
         "options": {
           "responseCode": 200
         }
       }
     },
     {
-      "id": "340b9c02-a391-423e-a113-9ecd1cba556a",
-      "name": "Respond created",
+      "id": "23018a11-3ec9-4055-b2e4-b828a9dc89fe",
+      "name": "Respond not found",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1380,
-        300
+        1340,
+        320
       ],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={ \"ok\": true, \"status\": \"created\" }",
+        "responseBody": "={ \"ok\": true, \"status\": \"not_found\" }",
         "options": {
-          "responseCode": 201
+          "responseCode": 200
         }
       }
     },
     {
-      "id": "212f678e-aba4-45de-88da-a479d5750f71",
+      "id": "eac75487-8e43-4690-8a03-d62366201b20",
       "name": "Respond rejected",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -280,47 +267,47 @@
       "main": [
         [
           {
-            "node": "Already subscribed?",
+            "node": "Split pages",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Already subscribed?": {
+    "Split pages": {
       "main": [
         [
           {
-            "node": "Reactivate subscriber",
+            "node": "Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Found?": {
+      "main": [
+        [
+          {
+            "node": "Mark unsubscribed",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Create subscriber",
+            "node": "Respond not found",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Reactivate subscriber": {
+    "Mark unsubscribed": {
       "main": [
         [
           {
-            "node": "Respond exists",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create subscriber": {
-      "main": [
-        [
-          {
-            "node": "Respond created",
+            "node": "Respond unsubscribed",
             "type": "main",
             "index": 0
           }

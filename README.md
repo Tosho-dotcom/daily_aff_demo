@@ -42,7 +42,7 @@ Polja: Name, Email, Status (Active/Unsubscribed), Consent, Source, Date subscrib
 4. Aktivirajte workflow. Produkcijski URL: `https://tomn8nproject.space/webhook/softbloom-subscribe`
 
 Tijek: `Webhook → Validate → Valid? → Find in Notion → Already subscribed?`
-→ ako postoji: `Reactivate subscriber` (Status = Active) → odgovor `exists`
+→ ako postoji: `Reactivate subscriber` (Status = Active, ime se ažurira) → odgovor `exists`
 → ako ne postoji: `Create subscriber` → odgovor `created`
 → neispravan zahtjev: odgovor 401/422.
 
@@ -55,6 +55,25 @@ Tijek: `Webhook → Validate → Valid? → Find in Notion → Already subscribe
 
 ### 4. Test
 Otvorite aplikaciju u privatnom prozoru, prijavite se i provjerite da se red pojavio u Notionu. Druga prijava istim e-mailom ne stvara duplikat.
+
+## Odjava
+
+Link za odjavu ima oblik `https://DOMENA/unsubscribe?e=EMAIL&t=POTPIS`, gdje je
+`POTPIS = HMAC-SHA256(email malim slovima, UNSUBSCRIBE_SECRET)` u hex zapisu.
+Bez ispravnog potpisa nitko ne može odjaviti tuđu adresu. Stranica traži potvrdu klikom
+(sigurnosni skeneri e-pošte automatski otvaraju linkove, pa odjava na samo otvaranje nije pouzdana).
+
+Tijek: stranica `/unsubscribe` → `POST /api/unsubscribe` (provjera potpisa) → n8n webhook `softbloom-unsubscribe`
+→ Notion: Status = Unsubscribed, Consent = false, Date unsubscribed = sada.
+
+Postavljanje:
+1. n8n: import `n8n/softbloom-unsubscribe.workflow.json`, u čvoru **Validate** isti ključ kao u subscribe workflowu,
+   Notion credential u čvorovima **Find in Notion** i **Mark unsubscribed**, zatim **Active**.
+2. Vercel (i `.env.local`): dodajte `N8N_UNSUBSCRIBE_WEBHOOK_URL` i `UNSUBSCRIBE_SECRET` (novi nasumični niz), pa redeploy.
+3. Testni link: `npm run unsub-link -- vas@email.com https://DOMENA`
+
+Kad budete slali e-mailove iz n8n-a, potpis se računa čvorom **Crypto** (Action: Hmac, Type: SHA256,
+Value: e-mail malim slovima, Secret: isti `UNSUBSCRIBE_SECRET`, Encoding: HEX).
 
 ## Prilagodbe
 
@@ -71,10 +90,14 @@ src/app/page.tsx              odabir ekrana (prijava / glavni)
 src/app/api/subscribe/route.ts proxy prema n8n-u (skriva URL i tajni ključ)
 src/app/manifest.ts           PWA manifest
 src/app/privacy/page.tsx      stranica o privatnosti
+src/app/unsubscribe/page.tsx  stranica za odjavu (s potvrdom)
+src/app/api/unsubscribe/      provjera potpisa i proxy prema n8n-u
+src/lib/unsubscribe.ts        izračun i provjera potpisa linka
+scripts/unsub-link.mjs        generator testnog linka za odjavu
 src/components/Welcome.tsx    ekran za ime i e-mail
 src/components/Home.tsx       glavni ekran s afirmacijom
 src/components/Particles.tsx  čestice (ambijent + prasak pri otkrivanju)
 src/lib/storage.ts            lokalna pohrana, špil, dnevni brojač
 public/sw.js                  service worker (offline ljuska)
-n8n/                          workflow za import
+n8n/                          workflowi za import (subscribe, unsubscribe)
 ```

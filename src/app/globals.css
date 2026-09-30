@@ -202,6 +202,12 @@ button { font: inherit; color: inherit; }
 .legal a, .linklike { color: #a893ab; text-decoration: none; background: none; border: 0; cursor: pointer; font-size: inherit; }
 .legal a:hover, .linklike:hover { color: var(--rose-deep); }
 
+/* ---------- unsubscribe ---------- */
+.form.center { text-align: center; align-items: stretch; }
+.card-title { font-family: var(--serif); font-size: 1.7rem; font-weight: 600; line-height: 1.2; }
+.form.center .btn.ghost { display: block; text-decoration: none; text-align: center; }
+.form-intro strong { color: var(--plum); word-break: break-all; }
+
 /* ---------- privacy ---------- */
 .prose { gap: 14px; padding-top: 32px; line-height: 1.65; }
 .prose h1 { font-family: var(--serif); font-size: 2.4rem; font-weight: 600; }
